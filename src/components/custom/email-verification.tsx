@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { authClient } from '@/lib/auth-client';
+import { useLocale } from '@/i18n/client-locale';
 
 export function EmailVerification({
   email,
@@ -12,6 +13,7 @@ export function EmailVerification({
   email: string;
   callbackURL?: string;
 }) {
+  const { t } = useLocale();
   const [pending, setPending] = useState(false);
   const [sent, setSent] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -33,19 +35,18 @@ export function EmailVerification({
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">Verify your email</h2>
+      <h2 className="text-lg font-semibold">{t('verifyEmailTitle')}</h2>
       <p className="text-sm text-muted-foreground">
-        Confirm {email} using a verification link. If you haven’t received an email, request one
-        below.
+        {t('verifyEmailBody', { email })}
       </p>
-      {sent ? <output>Check your inbox for your verification link.</output> : null}
+      {sent ? <output>{t('verifyEmailSent')}</output> : null}
       {failed ? (
         <p role="alert" className="text-sm text-destructive">
-          We could not send the verification email. Please try again shortly.
+          {t('verifyEmailFailed')}
         </p>
       ) : null}
       <Button type="button" onClick={resend} disabled={pending}>
-        {pending ? 'Sending…' : 'Resend verification email'}
+        {pending ? t('sendingEllipsis') : t('resendVerification')}
       </Button>
     </div>
   );

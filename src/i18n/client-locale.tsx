@@ -5,8 +5,9 @@ import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { IntlProvider, useTranslations } from 'use-intl';
 import { defaultLocale, isLocale, type Locale } from './config';
+import { publicMessages } from './public-messages';
 
-const messages = {
+const dashboardMessages = {
   en: {
     home: 'Home',
     jobs: 'Find jobs',
@@ -452,7 +453,15 @@ const messages = {
   },
 } as const;
 
+// Dashboard + public-page messages in one table. Every key must exist in all three languages.
+const messages = {
+  en: { ...dashboardMessages.en, ...publicMessages.en },
+  hi: { ...dashboardMessages.hi, ...publicMessages.hi },
+  mr: { ...dashboardMessages.mr, ...publicMessages.mr },
+};
+
 export type MessageKey = keyof typeof messages.en;
+type MessageValues = Record<string, string | number>;
 interface LocaleState {
   locale: Locale;
   setLocale: (locale: Locale) => Promise<void>;
@@ -497,5 +506,8 @@ export function useLocale() {
   const context = useContext(LocaleContext);
   const translate = useTranslations();
   if (!context) throw new Error('useLocale must be used within LocaleProvider');
-  return { ...context, t: (key: MessageKey) => translate(key) };
+  return {
+    ...context,
+    t: (key: MessageKey, values?: MessageValues) => translate(key, values),
+  };
 }

@@ -4,8 +4,10 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { signOut, useSession } from '@/lib/auth-client';
+import { useLocale } from '@/i18n/client-locale';
 
 export function AuthNav() {
+  const { t } = useLocale();
   const { data: session, isPending } = useSession();
 
   // Render nothing until the session resolves — avoids a Sign-in→Profile flash.
@@ -15,10 +17,10 @@ export function AuthNav() {
     return (
       <nav className="flex items-center gap-2">
         <Button asChild variant="ghost">
-          <Link href="/login">Sign in</Link>
+          <Link href="/login">{t('signIn')}</Link>
         </Button>
         <Button asChild>
-          <Link href="/signup">Sign up</Link>
+          <Link href="/signup">{t('authSignUp')}</Link>
         </Button>
       </nav>
     );
@@ -27,7 +29,7 @@ export function AuthNav() {
   return (
     <nav className="flex items-center gap-2">
       <Button asChild variant="ghost">
-        <Link href="/dashboard">Workspace</Link>
+        <Link href="/dashboard">{t('navWorkspace')}</Link>
       </Button>
       <Button
         variant="secondary"
@@ -36,7 +38,7 @@ export function AuthNav() {
           window.location.assign('/');
         }}
       >
-        Sign out
+        {t('signOut')}
       </Button>
     </nav>
   );

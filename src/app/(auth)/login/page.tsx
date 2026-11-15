@@ -1,6 +1,7 @@
 // @polsia:user-owned — seeded by polsia/modules/better-auth; restyle freely.
 
 import { SignInForm } from '@/components/custom/sign-in-form';
+import { T } from '@/i18n/t';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LoginPage() {
@@ -13,18 +14,22 @@ export default function LoginPage() {
 
       <Card className="relative w-full max-w-md shadow-brand border border-border/60 bg-card/95 backdrop-blur-sm">
         <CardHeader className="text-center pb-2">
-          <CardTitle className="text-h4">Welcome back</CardTitle>
-          <CardDescription>Sign in to your account to continue</CardDescription>
+          <CardTitle className="text-h4">
+            <T k="loginTitle" />
+          </CardTitle>
+          <CardDescription>
+            <T k="loginSub" />
+          </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
           <SignInForm />
           <p className="mt-4 text-center text-small text-muted-foreground">
-            Don&apos;t have an account?{' '}
+            <T k="noAccount" />{' '}
             <a
               href="/signup"
               className="text-brand-600 font-medium hover:text-brand-700 hover:underline underline-offset-2 transition-colors"
             >
-              Create one
+              <T k="createOne" />
             </a>
           </p>
         </CardContent>

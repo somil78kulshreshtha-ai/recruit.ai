@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
 import { LanguageSwitcher } from '@/components/custom/language-switcher';
+import { type MessageKey, useLocale } from '@/i18n/client-locale';
 import { ThemeToggle } from '@/components/custom/theme-toggle';
 import { SYSTEM_THEME } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,27 @@ import { cn } from '@/lib/utils';
 //     const { data } = useSession();
 //     return Boolean(data?.session);
 //   }
+// Menu labels live in src/lib/nav.ts in English; this maps each one to its translation key.
+const navLabelKeys: Record<string, MessageKey> = {
+  'Find jobs': 'navFindJobs',
+  'How it works': 'navHowItWorks',
+  Pricing: 'navPricing',
+  Contact: 'navContact',
+  Workspace: 'navWorkspace',
+  'Sign in': 'navSignIn',
+  'Hire talent': 'navHireTalent',
+  'Create an account': 'navCreateAccount',
+  'Admin access': 'navAdminAccess',
+  More: 'navMore',
+  'Open menu': 'navOpenMenu',
+};
+
+function NL({ text }: { text: string }) {
+  const { t } = useLocale();
+  const key = navLabelKeys[text];
+  return <>{key ? t(key) : text}</>;
+}
+
 function useIsAuthenticated(): boolean {
   const { data } = useSession();
   return Boolean(data?.user);
@@ -165,7 +187,7 @@ export function SiteNav() {
                   href={slot.item.href}
                   aria-current={isActive(slot.item.href) ? 'page' : undefined}
                 >
-                  {slot.item.label}
+                  <NL text={slot.item.label} />
                 </Link>
               </Button>
             ) : (
@@ -176,7 +198,7 @@ export function SiteNav() {
                     size="sm"
                     className={cn(isSlotActive(slot) && 'bg-accent text-accent-foreground')}
                   >
-                    {slot.label}
+                    <NL text={slot.label} />
                     <ChevronDown className="ml-1 size-4 opacity-60" aria-hidden />
                   </Button>
                 </DropdownMenuTrigger>
@@ -187,7 +209,7 @@ export function SiteNav() {
                         href={item.href}
                         aria-current={isActive(item.href) ? 'page' : undefined}
                       >
-                        {item.label}
+                        <NL text={item.label} />
                       </Link>
                     </DropdownMenuItem>
                   ))}
@@ -205,7 +227,7 @@ export function SiteNav() {
                   size="sm"
                   className={cn(overflow.some(isSlotActive) && 'bg-accent text-accent-foreground')}
                 >
-                  More
+                  <NL text="More" />
                   <ChevronDown className="ml-1 size-4 opacity-60" aria-hidden />
                 </Button>
               </DropdownMenuTrigger>
@@ -225,19 +247,19 @@ export function SiteNav() {
                             href={slot.item.href}
                             aria-current={isActive(slot.item.href) ? 'page' : undefined}
                           >
-                            {slot.item.label}
+                            <NL text={slot.item.label} />
                           </Link>
                         </DropdownMenuItem>
                       ) : (
                         <DropdownMenuGroup>
-                          <DropdownMenuLabel>{slot.label}</DropdownMenuLabel>
+                          <DropdownMenuLabel><NL text={slot.label} /></DropdownMenuLabel>
                           {slot.items.map((item) => (
                             <DropdownMenuItem key={item.href} asChild>
                               <Link
                                 href={item.href}
                                 aria-current={isActive(item.href) ? 'page' : undefined}
                               >
-                                {item.label}
+                                <NL text={item.label} />
                               </Link>
                             </DropdownMenuItem>
                           ))}
@@ -258,7 +280,7 @@ export function SiteNav() {
             {secondary.map((item) => (
               <Button key={item.href} asChild variant="secondary" size="sm">
                 <Link href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
-                  {item.label}
+                  <NL text={item.label} />
                 </Link>
               </Button>
             ))}
@@ -274,7 +296,9 @@ export function SiteNav() {
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
                   <Menu />
-                  <span className="sr-only">Open menu</span>
+                  <span className="sr-only">
+                    <NL text="Open menu" />
+                  </span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" aria-describedby={undefined} className="flex flex-col">
@@ -299,13 +323,13 @@ export function SiteNav() {
                           aria-current={isActive(slot.item.href) ? 'page' : undefined}
                           onClick={() => setOpen(false)}
                         >
-                          {slot.item.label}
+                          <NL text={slot.item.label} />
                         </Link>
                       </Button>
                     ) : (
                       <div key={`menu:${slot.label}`} className="flex flex-col gap-1">
                         <p className="px-3 pt-2 text-xs font-medium text-muted-foreground">
-                          {slot.label}
+                          <NL text={slot.label} />
                         </p>
                         {slot.items.map((item) => (
                           <Button
@@ -322,7 +346,7 @@ export function SiteNav() {
                               aria-current={isActive(item.href) ? 'page' : undefined}
                               onClick={() => setOpen(false)}
                             >
-                              {item.label}
+                              <NL text={item.label} />
                             </Link>
                           </Button>
                         ))}
@@ -343,7 +367,7 @@ export function SiteNav() {
                             aria-current={isActive(item.href) ? 'page' : undefined}
                             onClick={() => setOpen(false)}
                           >
-                            {item.label}
+                            <NL text={item.label} />
                           </Link>
                         </Button>
                       ))}
@@ -376,7 +400,7 @@ export function SiteFooter() {
       >
         {footer.map((item) => (
           <Button key={item.href} asChild variant="link" size="sm">
-            <Link href={item.href}>{item.label}</Link>
+            <Link href={item.href}><NL text={item.label} /></Link>
           </Button>
         ))}
       </nav>

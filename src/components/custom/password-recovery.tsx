@@ -5,8 +5,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useLocale } from '@/i18n/client-locale';
 
 export function PasswordResetRequest() {
+  const { t } = useLocale();
   const [email, setEmail] = useState('');
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState('');
@@ -24,11 +26,11 @@ export function PasswordResetRequest() {
         credentials: 'same-origin',
         body: JSON.stringify({ email, redirectTo: '/reset-password' }),
       });
-      if (!response.ok) throw new Error('Could not request a reset email. Please try again.');
-      setMessage('If that account exists, a password reset link has been sent.');
+      if (!response.ok) throw new Error(t('resetRequestFailed'));
+      setMessage(t('resetSent'));
     } catch (submitError) {
       setError(
-        submitError instanceof Error ? submitError.message : 'Could not request a reset email.',
+        submitError instanceof Error ? submitError.message : t('resetRequestDefault'),
       );
     } finally {
       setPending(false);
@@ -37,7 +39,7 @@ export function PasswordResetRequest() {
 
   return (
     <form onSubmit={submit} className="grid gap-3">
-      <Label htmlFor="reset-email">Email address</Label>
+      <Label htmlFor="reset-email">{t('emailAddress')}</Label>
       <Input
         id="reset-email"
         type="email"
@@ -53,13 +55,14 @@ export function PasswordResetRequest() {
         </p>
       ) : null}
       <Button type="submit" disabled={pending}>
-        {pending ? 'Sending…' : 'Send reset link'}
+        {pending ? t('sendingEllipsis') : t('sendResetLink')}
       </Button>
     </form>
   );
 }
 
 export function ResetPasswordForm({ token }: { token: string }) {
+  const { t } = useLocale();
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
@@ -77,11 +80,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
         body: JSON.stringify({ newPassword: password, token }),
       });
       if (!response.ok)
-        throw new Error('This reset link is invalid or expired. Request a new one.');
+        throw new Error(t('resetLinkInvalid'));
       setDone(true);
     } catch (submitError) {
       setError(
-        submitError instanceof Error ? submitError.message : 'Could not reset the password.',
+        submitError instanceof Error ? submitError.message : t('resetDefaultError'),
       );
     } finally {
       setPending(false);
@@ -91,16 +94,16 @@ export function ResetPasswordForm({ token }: { token: string }) {
   if (!token)
     return (
       <p role="alert" className="text-sm text-destructive">
-        Reset token is missing. Request a new reset link.
+        {t('resetTokenMissing')}
       </p>
     );
   if (done)
     return (
-      <output className="text-sm text-emerald-700">Password updated. You can now sign in.</output>
+      <output className="text-sm text-emerald-700">{t('resetDone')}</output>
     );
   return (
     <form onSubmit={submit} className="grid gap-3">
-      <Label htmlFor="new-password">New password</Label>
+      <Label htmlFor="new-password">{t('newPassword')}</Label>
       <Input
         id="new-password"
         type="password"
@@ -116,7 +119,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         </p>
       ) : null}
       <Button type="submit" disabled={pending}>
-        {pending ? 'Saving…' : 'Update password'}
+        {pending ? t('savingEllipsis') : t('updatePassword')}
       </Button>
     </form>
   );

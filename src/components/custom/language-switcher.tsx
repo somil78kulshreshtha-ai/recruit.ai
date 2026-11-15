@@ -8,7 +8,7 @@ import { type Locale, locales } from '@/i18n/config';
 const labels: Record<Locale, string> = { en: 'English', hi: 'हिन्दी', mr: 'मराठी' };
 
 export function LanguageSwitcher() {
-  const { locale, setLocale } = useLocale();
+  const { locale, setLocale, t } = useLocale();
   const [error, setError] = useState('');
 
   async function change(value: string) {
@@ -17,15 +17,15 @@ export function LanguageSwitcher() {
       const next = locales.find((item) => item === value);
       if (next) await setLocale(next);
     } catch {
-      setError('Language could not be saved.');
+      setError(t('languageSaveError'));
     }
   }
 
   return (
     <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-      <span className="sr-only">Language</span>
+      <span className="sr-only">{t('language')}</span>
       <select
-        aria-label="Language"
+        aria-label={t('language')}
         value={locale}
         onChange={(event) => void change(event.target.value)}
         className="h-9 rounded-md border border-border bg-background px-2 text-foreground"

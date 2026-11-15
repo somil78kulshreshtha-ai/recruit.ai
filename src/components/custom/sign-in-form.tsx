@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { signIn } from '@/lib/auth-client';
+import { useLocale } from '@/i18n/client-locale';
 
 // Email + password sign-in. Composes the template's base shadcn primitives
 // (Button/Input/Label) styled through the theme tokens. Restyle freely — this
 // file is user-owned. Calls better-auth's authClient.signIn.email; on success
 // the session cookie is set by the catch-all route handler and the page reloads.
 export function SignInForm() {
+  const { t } = useLocale();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
@@ -37,12 +39,12 @@ export function SignInForm() {
     try {
       const { error: signInError } = await signIn.email({ email, password });
       if (signInError) {
-        setError(signInError.message ?? 'Could not sign in. Check your details.');
+        setError(signInError.message ?? t('signInFailed'));
         return;
       }
       window.location.assign(destination());
     } catch {
-      setError('Could not sign in right now. Please try again.');
+      setError(t('signInRetry'));
     } finally {
       setPending(false);
     }
@@ -58,10 +60,10 @@ export function SignInForm() {
         credentials: 'same-origin',
         body: JSON.stringify({ email, type: 'sign-in' }),
       });
-      if (!response.ok) throw new Error('Email delivery failed. Please try again shortly.');
+      if (!response.ok) throw new Error(t('otpSendFailed'));
       setOtpSent(true);
     } catch (sendError) {
-      setError(sendError instanceof Error ? sendError.message : 'Could not send a sign-in code.');
+      setError(sendError instanceof Error ? sendError.message : t('otpSendDefault'));
     } finally {
       setPending(false);
     }
@@ -78,10 +80,10 @@ export function SignInForm() {
         credentials: 'same-origin',
         body: JSON.stringify({ email, otp, name }),
       });
-      if (!response.ok) throw new Error('That code could not be verified. Check it and try again.');
+      if (!response.ok) throw new Error(t('otpVerifyFailed'));
       window.location.assign(destination());
     } catch (verifyError) {
-      setError(verifyError instanceof Error ? verifyError.message : 'Could not verify the code.');
+      setError(verifyError instanceof Error ? verifyError.message : t('otpVerifyDefault'));
     } finally {
       setPending(false);
     }
@@ -90,7 +92,7 @@ export function SignInForm() {
   return (
     <>
       <fieldset className="mb-5 min-w-0 rounded-lg bg-muted p-1">
-        <legend className="sr-only">Sign-in method</legend>
+        <legend className="sr-only">{t('siMethod')}</legend>
         <div className="grid grid-cols-3">
           <button
             className={`rounded-md px-2 py-2 text-xs font-medium ${mode === 'password' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
@@ -100,7 +102,7 @@ export function SignInForm() {
               setError(undefined);
             }}
           >
-            Password
+            {t('passwordLabel')}
           </button>
           <button
             className={`rounded-md px-2 py-2 text-xs font-medium ${mode === 'otp' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
@@ -110,7 +112,7 @@ export function SignInForm() {
               setError(undefined);
             }}
           >
-            Email OTP
+            {t('siEmailOtp')}
           </button>
           <button
             className={`rounded-md px-2 py-2 text-xs font-medium ${mode === 'mobile' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
@@ -120,13 +122,13 @@ export function SignInForm() {
               setError(undefined);
             }}
           >
-            Mobile OTP
+            {t('siMobileOtp')}
           </button>
         </div>
       </fieldset>
       {mode === 'password' ? (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3" noValidate>
-          <Label htmlFor="sign-in-email">Email address</Label>
+          <Label htmlFor="sign-in-email">{t('emailAddress')}</Label>
           <Input
             id="sign-in-email"
             name="email"
@@ -142,9 +144,9 @@ export function SignInForm() {
             href="/forgot-password"
             className="self-end text-sm text-primary underline-offset-4 hover:underline"
           >
-            Forgot password?
+            {t('forgotPassword')}
           </Link>
-          <Label htmlFor="sign-in-password">Password</Label>
+          <Label htmlFor="sign-in-password">{t('passwordLabel')}</Label>
           <Input
             id="sign-in-password"
             name="password"
@@ -157,7 +159,7 @@ export function SignInForm() {
           />
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" disabled={pending} className="w-full">
-            {pending ? 'Signing in…' : 'Sign in'}
+            {pending ? t('signingIn') : t('signIn')}
           </Button>
           <GoogleSignInButton />
         </form>
@@ -172,7 +174,7 @@ export function SignInForm() {
           className="flex flex-col gap-3"
           noValidate
         >
-          <Label htmlFor="otp-email">Email address</Label>
+          <Label htmlFor="otp-email">{t('emailAddress')}</Label>
           <Input
             id="otp-email"
             type="email"
@@ -183,14 +185,14 @@ export function SignInForm() {
           />
           {otpSent ? (
             <>
-              <Label htmlFor="otp-name">Your name (for a new account)</Label>
+              <Label htmlFor="otp-name">{t('otpName')}</Label>
               <Input
                 id="otp-name"
                 autoComplete="name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
               />
-              <Label htmlFor="email-otp">6-digit code</Label>
+              <Label htmlFor="email-otp">{t('otpCode')}</Label>
               <Input
                 id="email-otp"
                 inputMode="numeric"
@@ -209,7 +211,7 @@ export function SignInForm() {
             </p>
           ) : null}
           <Button type="submit" disabled={pending || !email}>
-            {pending ? 'Please wait…' : otpSent ? 'Verify and sign in' : 'Send email code'}
+            {pending ? t('pleaseWait') : otpSent ? t('verifyAndSignIn') : t('sendEmailCode')}
           </Button>
           {otpSent ? (
             <button
@@ -217,21 +219,19 @@ export function SignInForm() {
               className="text-sm text-primary underline-offset-4 hover:underline"
               onClick={() => void sendOtp()}
             >
-              Send a new code
+              {t('sendNewCode')}
             </button>
           ) : null}
           <p className="text-xs text-muted-foreground">
-            Codes expire after five minutes. Email verification is completed by a successful OTP
-            sign-in.
+            {t('otpNote')}
           </p>
         </form>
       ) : null}
       {mode === 'mobile' ? (
         <div className="rounded-lg border border-border bg-muted/50 p-4 text-sm">
-          <p className="font-medium">Mobile OTP is not configured</p>
+          <p className="font-medium">{t('mobileOtpTitle')}</p>
           <p className="mt-1 text-muted-foreground">
-            A real SMS provider and credentials are required before this sign-in method can send
-            codes.
+            {t('mobileOtpBody')}
           </p>
         </div>
       ) : null}
