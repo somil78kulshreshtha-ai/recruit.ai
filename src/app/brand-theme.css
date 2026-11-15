@@ -1,0 +1,75 @@
+/* @polsia:user-owned — RecruitAI light and dark semantic themes. */
+:root {
+  color-scheme: light;
+  --background: #f6f8fc;
+  --foreground: #111a2d;
+  --card: #ffffff;
+  --card-foreground: #111a2d;
+  --popover: #ffffff;
+  --popover-foreground: #111a2d;
+  --primary: #3e61df;
+  --primary-foreground: #ffffff;
+  --secondary: #edf1f8;
+  --secondary-foreground: #192540;
+  --muted: #edf1f8;
+  --muted-foreground: #67738a;
+  --accent: #e9e8ff;
+  --accent-foreground: #4339a5;
+  --destructive: #c6445c;
+  --border: #dfe5ef;
+  --input: #dfe5ef;
+  --ring: #7892f2;
+  --brand-50: #f2f5ff;
+  --brand-100: #e2e9ff;
+  --brand-200: #c6d2ff;
+  --brand-300: #a3b7ff;
+  --brand-400: #7892f2;
+  --brand-500: #5574e8;
+  --brand-600: #3e61df;
+  --brand-700: #334eb7;
+  --brand-800: #293e91;
+  --brand-900: #1d2e70;
+  --elevation-1: rgb(22 42 80 / 7%);
+  --elevation-2: rgb(28 47 85 / 11%);
+  --elevation-3: rgb(19 39 79 / 16%);
+  --shadow-brand-color: rgb(62 97 223 / 25%);
+  --font-display: "Inter", "Segoe UI", sans-serif;
+  --font-body: "Inter", "Segoe UI", sans-serif;
+  --radius: 0.75rem;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #111827;
+  --foreground: #f0f4fb;
+  --card: #172033;
+  --card-foreground: #f0f4fb;
+  --popover: #172033;
+  --popover-foreground: #f0f4fb;
+  --primary: #93a8ff;
+  --primary-foreground: #121a2a;
+  --secondary: #222e44;
+  --secondary-foreground: #e7ecf7;
+  --muted: #222e44;
+  --muted-foreground: #abb7ca;
+  --accent: #29274a;
+  --accent-foreground: #cbc7ff;
+  --destructive: #fa8797;
+  --border: #2e3a50;
+  --input: #344259;
+  --ring: #93a8ff;
+  --brand-50: #202b4c;
+  --brand-100: #293961;
+  --brand-200: #394e87;
+  --brand-300: #516bb0;
+  --brand-400: #7892f2;
+  --brand-500: #93a8ff;
+  --brand-600: #a8b7ff;
+  --brand-700: #bdc9ff;
+  --brand-800: #d5ddff;
+  --brand-900: #e9edff;
+  --elevation-1: rgb(0 0 0 / 28%);
+  --elevation-2: rgb(0 0 0 / 36%);
+  --elevation-3: rgb(0 0 0 / 44%);
+  --shadow-brand-color: rgb(82 106 203 / 40%);
+}

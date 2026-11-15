@@ -1,0 +1,283 @@
+enum WorkMode {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum JobStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  REJECTED
+  EXPIRED
+  REMOVED
+}
+
+enum ApplicationStatus {
+  APPLIED
+  SHORTLISTED
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+}
+
+enum CompanyRole {
+  OWNER
+  RECRUITER
+  HIRING_MANAGER
+}
+
+model CandidateProfile {
+  id                    String        @id @default(cuid())
+  userId                String        @unique
+  fullName              String        @default("")
+  headline              String        @default("")
+  city                  String        @default("")
+  skills                String[]      @default([])
+  experienceYears       Float?
+  education             String        @default("")
+  expectedCtc           Int?
+  noticePeriodDays      Int?
+  preferredLocations    String[]      @default([])
+  workMode              WorkMode?
+  isOpenToWork          Boolean       @default(true)
+  isDiscoverable        Boolean       @default(false)
+  isDemo                Boolean       @default(false)
+  demoLabel             String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  resumes               Resume[]
+  applications          Application[]
+
+  @@index([city, isDiscoverable, isDemo])
+}
+
+model Resume {
+  id           String          @id @default(cuid())
+  profileId    String
+  fileKey      String          @unique
+  filename     String
+  isCurrent    Boolean         @default(true)
+  isDemo       Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  profile      CandidateProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@index([profileId, isCurrent])
+}
+
+model Company {
+  id                   String              @id @default(cuid())
+  name                 String
+  slug                 String              @unique
+  description          String              @default("")
+  website              String              @default("")
+  industry             String              @default("")
+  city                 String              @default("")
+  verificationStatus   String              @default("UNVERIFIED")
+  suspended            Boolean             @default(false)
+  isDemo               Boolean             @default(false)
+  demoLabel            String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  memberships          CompanyMembership[]
+  jobs                 Job[]
+  outreachMessages     OutreachMessage[]
+
+  @@index([name, industry, city])
+}
+
+model CompanyMembership {
+  id        String      @id @default(cuid())
+  companyId String
+  userId    String
+  role      CompanyRole @default(RECRUITER)
+  active    Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  company   Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, userId])
+  @@index([userId, active])
+}
+
+model Job {
+  id                    String             @id @default(cuid())
+  companyId             String
+  createdByUserId       String
+  title                 String
+  description           String
+  location              String
+  workMode              WorkMode
+  salaryMin             Int?
+  salaryMax             Int?
+  experienceMinYears    Float              @default(0)
+  experienceMaxYears    Float?
+  employmentType        EmploymentType     @default(FULL_TIME)
+  industry              String             @default("")
+  skills                String[]           @default([])
+  maxNoticePeriodDays   Int?
+  status                JobStatus          @default(DRAFT)
+  moderationNote        String             @default("")
+  postedAt              DateTime?
+  expiresAt             DateTime?
+  isDemo                Boolean            @default(false)
+  demoLabel             String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  company               Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  applications          Application[]
+  savedJobs             SavedJob[]
+  scamReports           ScamReport[]
+
+  @@index([status, isDemo, expiresAt])
+  @@index([companyId, status])
+  @@index([location, workMode, employmentType])
+  @@index([title, industry])
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String
+  createdAt DateTime @default(now())
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([userId, createdAt])
+}
+
+model JobAlert {
+  id             String   @id @default(cuid())
+  userId         String
+  label          String   @default("Job alert")
+  criteria       Json
+  emailEnabled   Boolean  @default(true)
+  whatsappEnabled Boolean @default(false)
+  active         Boolean  @default(true)
+  isDemo         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId, active])
+}
+
+model Application {
+  id                String                  @id @default(cuid())
+  seekerUserId      String
+  candidateProfileId String
+  jobId             String
+  resumeId          String?
+  status            ApplicationStatus       @default(APPLIED)
+  profileSnapshot   Json
+  isDemo            Boolean                 @default(false)
+  demoLabel         String?
+  appliedAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  candidateProfile  CandidateProfile        @relation(fields: [candidateProfileId], references: [id], onDelete: Cascade)
+  job               Job                     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resume            Resume?                 @relation(fields: [resumeId], references: [id])
+  history           ApplicationStageHistory[]
+  comments          ApplicationComment[]
+
+  @@unique([seekerUserId, jobId])
+  @@index([jobId, status, isDemo])
+  @@index([seekerUserId, appliedAt])
+}
+
+model ApplicationStageHistory {
+  id            String            @id @default(cuid())
+  eventKey      String?           @unique
+  applicationId String
+  fromStatus    ApplicationStatus?
+  toStatus      ApplicationStatus
+  authorUserId  String
+  note          String            @default("")
+  isDemo        Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, createdAt])
+}
+
+model ApplicationComment {
+  id            String      @id @default(cuid())
+  applicationId String
+  authorUserId  String
+  body          String
+  visibility    String      @default("TEAM")
+  isDemo        Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, visibility, createdAt])
+}
+
+model SavedCandidateSearch {
+  id        String   @id @default(cuid())
+  userId    String
+  query     String
+  criteria  Json
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model OutreachMessage {
+  id              String   @id @default(cuid())
+  companyId       String
+  candidateUserId String
+  senderUserId    String
+  body            String
+  deliveryStatus  String   @default("PENDING")
+  createdAt       DateTime @default(now())
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, createdAt])
+  @@index([candidateUserId, createdAt])
+}
+
+model ScamReport {
+  id          String   @id @default(cuid())
+  jobId       String
+  reporterId  String
+  reason      String
+  status      String   @default("OPEN")
+  isDemo      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([jobId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  href      String   @default("/dashboard")
+  kind      String   @default("activity")
+  isDemo    Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+model RateLimitBucket {
+  id          String   @id @default(cuid())
+  bucketKey   String   @unique
+  count       Int      @default(1)
+  windowStart DateTime
+  updatedAt   DateTime @updatedAt
+
+  @@index([windowStart])
+}
