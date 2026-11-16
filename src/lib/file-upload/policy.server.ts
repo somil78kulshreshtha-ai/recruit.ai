@@ -41,34 +41,52 @@ export async function authorizeUpload(request: Request): Promise<UploadAuthoriza
   if (!profile || profile.isDemo) return UploadAuthorization.Deny;
 
   const path = new URL(request.url).pathname;
-  if (path === '/api/upload' && request.headers.get('content-type')?.includes('application/json')) {
-    const body: unknown = await request
-      .clone()
-      .json()
-      .catch(() => null);
-    if (!body || typeof body !== 'object') return UploadAuthorization.Deny;
-    const payload = body as {
-      filename?: unknown;
-      mime_type?: unknown;
-      size?: unknown;
-      visibility?: unknown;
-    };
-    const filename =
-      typeof payload.filename === 'string' ? payload.filename.toLocaleLowerCase() : '';
+  if (path === '/api/upload') {
     const allowedTypes: Record<string, string> = {
       '.pdf': 'application/pdf',
       '.doc': 'application/msword',
       '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     };
-    const extension = Object.keys(allowedTypes).find((item) => filename.endsWith(item));
-    if (
-      !extension ||
-      payload.mime_type !== allowedTypes[extension] ||
-      typeof payload.size !== 'number' ||
-      payload.size > 5 * 1024 * 1024 ||
-      payload.visibility !== 'private'
-    )
+    const isAllowedResume = (filename: string, mimeType: string, size: number) => {
+      const normalized = filename.toLocaleLowerCase();
+      const extension = Object.keys(allowedTypes).find((item) => normalized.endsWith(item));
+      return Boolean(
+        extension &&
+          allowedTypes[extension] === mimeType &&
+          size > 0 &&
+          size <= 5 * 1024 * 1024,
+      );
+    };
+
+    if (request.headers.get('content-type')?.includes('application/json')) {
+      const body: unknown = await request.clone().json().catch(() => null);
+      if (!body || typeof body !== 'object') return UploadAuthorization.Deny;
+      const payload = body as {
+        filename?: unknown;
+        mime_type?: unknown;
+        size?: unknown;
+        visibility?: unknown;
+      };
+      if (
+        typeof payload.filename !== 'string' ||
+        typeof payload.mime_type !== 'string' ||
+        typeof payload.size !== 'number' ||
+        payload.visibility !== 'private' ||
+        !isAllowedResume(payload.filename, payload.mime_type, payload.size)
+      )
+        return UploadAuthorization.Deny;
+    } else if (request.headers.get('content-type')?.includes('multipart/form-data')) {
+      const form = await request.clone().formData().catch(() => null);
+      const file = form?.get('file');
+      if (
+        !(file instanceof File) ||
+        form?.get('visibility') !== 'private' ||
+        !isAllowedResume(file.name, file.type, file.size)
+      )
+        return UploadAuthorization.Deny;
+    } else {
       return UploadAuthorization.Deny;
+    }
   }
   return UploadAuthorization.Allow;
 }
