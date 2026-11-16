@@ -7,16 +7,34 @@ import { forbidden, rateLimit, requestUser, unauthorized } from '@/lib/business/
 import { prisma } from '@/lib/db';
 import { sameOrigin } from '@/lib/same-origin';
 
-const resumeSchema = z.object({
-  key: z.string().min(3).max(512),
-  filename: z.string().trim().min(1).max(255),
-  mime_type: z.literal('application/pdf'),
-  size: z
-    .number()
-    .int()
-    .positive()
-    .max(50 * 1024 * 1024),
-});
+const resumeSchema = z
+  .object({
+    key: z.string().min(3).max(512),
+    filename: z.string().trim().min(1).max(255),
+    mime_type: z.enum([
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ]),
+    size: z.number().int().positive().max(5 * 1024 * 1024),
+  })
+  .superRefine((value, context) => {
+    const filename = value.filename.toLocaleLowerCase();
+    const expectedMime = filename.endsWith('.pdf')
+      ? 'application/pdf'
+      : filename.endsWith('.doc')
+        ? 'application/msword'
+        : filename.endsWith('.docx')
+          ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          : null;
+    if (!expectedMime || value.mime_type !== expectedMime) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['filename'],
+        message: 'Choose a PDF, DOC or DOCX resume.',
+      });
+    }
+  });
 
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return forbidden();
@@ -28,7 +46,7 @@ export async function POST(request: Request) {
   const parsed = resumeSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { errors: { file: 'Choose a PDF resume up to 50 MB.' } },
+      { errors: { file: 'Choose a PDF, DOC or DOCX resume up to 5 MB.' } },
       { status: 400 },
     );
   }
