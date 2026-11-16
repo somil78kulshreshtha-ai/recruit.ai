@@ -1,0 +1,18 @@
+# Sends the daily "applicants are waiting" reminders to hiring teams.
+# Needs two repository secrets (GitHub -> Settings -> Secrets and variables -> Actions):
+#   SITE_URL     e.g. https://recruit-ai-1-9thk.onrender.com   (no slash at the end)
+#   CRON_SECRET  the same value as CRON_SECRET in Render's Environment
+name: Daily follow-up reminders
+on:
+  schedule:
+    - cron: '30 3 * * *' # 09:00 India time (03:30 UTC)
+  workflow_dispatch: {} # lets you run it by hand from the Actions tab
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the follow-up endpoint
+        run: |
+          curl --fail --show-error --silent --retry 3 --retry-delay 20 --max-time 180 \
+            -H "authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/cron/follow-up"

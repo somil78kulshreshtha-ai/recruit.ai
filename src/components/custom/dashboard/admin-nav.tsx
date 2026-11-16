@@ -4,6 +4,7 @@
 import {
   Building2,
   ClipboardList,
+  Clock,
   Flag,
   LayoutDashboard,
   type LucideIcon,
@@ -22,6 +23,7 @@ const items: { href: string; labelKey: MessageKey; icon: LucideIcon }[] = [
   { href: '/admin/jobs', labelKey: 'adminJobs', icon: ShieldCheck },
   { href: '/admin/applications', labelKey: 'adminApplications', icon: ClipboardList },
   { href: '/admin/reports', labelKey: 'adminReports', icon: Flag },
+  { href: '/admin/follow-up', labelKey: 'adminFollowUp', icon: Clock },
 ];
 
 export function AdminNav({ collapsed = false }: { collapsed?: boolean }) {
