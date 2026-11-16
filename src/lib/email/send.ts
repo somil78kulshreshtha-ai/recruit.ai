@@ -1,7 +1,11 @@
-// @polsia:framework-owned - DO NOT EDIT. Code installed by polsia/modules/email@0.5.2. Drift = commit rejected.
-// Server-only sendEmail transport — POSTs to the Polsia email proxy. Import it from your app's
-// OWN server route handlers (never expose a generic /api/email route). Compose subject/html/text in
-// the user-owned @/lib/email/templates, then: sendEmail({ to, ...welcomeEmail({ name }) }).
+// @polsia:user-owned — email transport rewritten to use Resend (https://resend.com) instead of the
+// Polsia email proxy. Same exports as before, so every caller keeps working unchanged.
+//
+// Server-only. Environment variables (set them in Render → Environment):
+//   RESEND_API_KEY  — your Resend API key (starts with "re_"). Required.
+//   EMAIL_FROM      — sender, e.g. "RecruitAI <hello@yourdomain.com>". Optional. Until you verify a
+//                     domain in Resend it defaults to "RecruitAI <onboarding@resend.dev>", which can
+//                     only send to the email address you used to sign up at Resend.
 
 import 'server-only';
 import { env } from '@/lib/env';
@@ -11,64 +15,62 @@ export interface SendEmailInput {
   subject: string;
   html: string;
   text?: string;
-  // Thread a reply onto a received message (its company_emails id, from the /api/proxy/email/inbox
-  // feed). Genuine replies skip the cold-send cap. Omit to start a new thread.
+  // Kept for compatibility with older callers. Resend does not use it.
   replyToEmailId?: string;
 }
 
 export interface SendEmailResult {
-  // company_emails id of the stored outbound message. Empty string when the recipient was
-  // suppressed (unsubscribed/bounced) — the proxy accepted the call but sent nothing.
+  // Resend's message id. Callers treat an empty id as "not delivered".
   id: string;
 }
 
 /**
- * Base of the Polsia email proxy — the injected URL with any trailing slash and any `/send`
- * suffix stripped, so `${proxyBaseUrl()}/<route>` addresses the whole `/api/proxy/email/*`
- * family. Exported so the sibling framework transport (`./submissions`) derives the SAME base
- * instead of re-deriving it and drifting.
+ * Kept because ./submissions imports it. It only matters for the Polsia dashboard; the contact
+ * form skips that path when POLSIA_API_KEY is not set (see submissions.ts).
  */
 export function proxyBaseUrl(): string {
   return env.POLSIA_EMAIL_PROXY_URL.replace(/\/+$/, '').replace(/\/send$/, '');
 }
 
+const DEFAULT_FROM = 'RecruitAI <onboarding@resend.dev>';
+
 export async function sendEmail(
   input: SendEmailInput,
   options?: { signal?: AbortSignal },
 ): Promise<SendEmailResult> {
-  const url = `${proxyBaseUrl()}/send`;
-  const body =
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error('Email is not configured: RESEND_API_KEY is missing.');
+
+  const text =
     input.text ??
     input.html
       .replace(/<[^>]+>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-  // POLSIA_API_KEY via process.env (platform-injected; not in typed env — ai/stripe declare it).
-  const res = await fetch(url, {
+
+  const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    // Bound connection and response-body reads; allow a caller's earlier deadline.
     signal: options?.signal
-      ? AbortSignal.any([options.signal, AbortSignal.timeout(30_000)])
-      : AbortSignal.timeout(30_000),
+      ? AbortSignal.any([options.signal, AbortSignal.timeout(20_000)])
+      : AbortSignal.timeout(20_000),
     headers: {
       'content-type': 'application/json',
-      authorization: `Bearer ${process.env.POLSIA_API_KEY ?? ''}`,
+      authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      to: input.to,
+      from: process.env.EMAIL_FROM || DEFAULT_FROM,
+      to: [input.to],
       subject: input.subject,
-      body,
       html: input.html,
-      ...(input.text ? { text: input.text } : {}),
-      ...(input.replyToEmailId ? { reply_to_email_id: input.replyToEmailId } : {}),
+      text,
     }),
   });
+
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
-    throw new Error(`email proxy send failed: ${res.status} ${detail}`.trim());
+    throw new Error(`Resend send failed: ${res.status} ${detail}`.trim());
   }
-  // Proxy returns { success, email_id: number, message_id, ... }, email_id absent when suppressed.
-  // Stringify it so id matches SendEmailResult at runtime (e.g. 8064 -> "8064").
-  const json = (await res.json()) as { email_id?: number };
-  return { id: json.email_id == null ? '' : String(json.email_id) };
+
+  const json = (await res.json()) as { id?: string };
+  return { id: json.id ?? '' };
 }

@@ -54,6 +54,9 @@ export interface RecordSubmissionResult {
 export async function recordSubmission(
   input: RecordSubmissionInput,
 ): Promise<RecordSubmissionResult> {
+  // Not hosted on Polsia: there is no dashboard to record into, so let the caller email the
+  // company inbox (POLSIA_COMPANY_EMAIL) instead.
+  if (!process.env.POLSIA_API_KEY) return { recorded: false };
   // POLSIA_API_KEY via process.env (platform-injected; not in typed env — ai/stripe declare it).
   const res = await fetch(`${proxyBaseUrl()}/submissions`, {
     method: 'POST',
