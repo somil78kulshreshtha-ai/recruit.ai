@@ -55,11 +55,17 @@ export async function authorizeUpload(request: Request): Promise<UploadAuthoriza
     };
     const filename =
       typeof payload.filename === 'string' ? payload.filename.toLocaleLowerCase() : '';
+    const allowedTypes: Record<string, string> = {
+      '.pdf': 'application/pdf',
+      '.doc': 'application/msword',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+    const extension = Object.keys(allowedTypes).find((item) => filename.endsWith(item));
     if (
-      !filename.endsWith('.pdf') ||
-      payload.mime_type !== 'application/pdf' ||
+      !extension ||
+      payload.mime_type !== allowedTypes[extension] ||
       typeof payload.size !== 'number' ||
-      payload.size > 50 * 1024 * 1024 ||
+      payload.size > 5 * 1024 * 1024 ||
       payload.visibility !== 'private'
     )
       return UploadAuthorization.Deny;
