@@ -4,7 +4,7 @@
 import { Bookmark, BriefcaseBusiness, MapPin, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,8 +46,10 @@ export function JobsSearch() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const requestId = useRef(0);
 
   const loadJobs = useCallback(async () => {
+    const id = ++requestId.current;
     setLoading(true);
     setError('');
     const params = new URLSearchParams();
@@ -56,17 +58,25 @@ export function JobsSearch() {
     });
     try {
       const result = await apiFetch(`/api/jobs?${params.toString()}`, { schema: jobListSchema });
-      setJobs(result.items);
+      if (id === requestId.current) setJobs(result.items);
     } catch {
-      setError('load-failed');
+      if (id === requestId.current) setError('load-failed');
     } finally {
-      setLoading(false);
+      if (id === requestId.current) setLoading(false);
     }
   }, [filters]);
 
   useEffect(() => {
     void loadJobs();
   }, [loadJobs]);
+
+  // Prefill the search from the homepage form (/jobs?q=...&city=...).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q')?.slice(0, 100) ?? '';
+    const city = params.get('city')?.slice(0, 100) ?? '';
+    if (q || city) setFilters((current) => ({ ...current, q, city }));
+  }, []);
 
   async function toggleSaved(job: PublicJob) {
     if (!session?.user) {
