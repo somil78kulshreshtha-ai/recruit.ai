@@ -163,3 +163,201 @@ export async function seed(): Promise<void> {
     update: {},
   });
 }
+  // DEMO CANDIDATES
+  const candidates = [
+    {
+      id: "demo-profile-riya",
+      userId: "demo-seeker-riya",
+      fullName: "Demo candidate · Riya Sharma",
+      headline: "Frontend Developer",
+      city: "Pune",
+      skills: ["React", "Next.js", "TypeScript", "Tailwind CSS"],
+      experienceYears: 2,
+      education: "B.Tech Computer Science",
+    },
+    {
+      id: "demo-profile-rahul",
+      userId: "demo-seeker-rahul",
+      fullName: "Demo candidate · Rahul Verma",
+      headline: "Backend Developer",
+      city: "Bengaluru",
+      skills: ["Node.js", "Python", "PostgreSQL", "AWS"],
+      experienceYears: 4,
+      education: "B.Tech Information Technology",
+    },
+    {
+      id: "demo-profile-neha",
+      userId: "demo-seeker-neha",
+      fullName: "Demo candidate · Neha Patel",
+      headline: "Data Analyst",
+      city: "Mumbai",
+      skills: ["Python", "SQL", "Power BI", "Excel"],
+      experienceYears: 3,
+      education: "M.Sc Data Science",
+    },
+  ];
+
+  for (const candidate of candidates) {
+    const profile = await prisma.candidateProfile.upsert({
+      where: { userId: candidate.userId },
+      create: {
+        ...candidate,
+        isDemo: true,
+        isDiscoverable: true,
+        isOpenToWork: true,
+        preferredLocations: [candidate.city, "Remote"],
+        demoLabel: "DEMO DATA · NOT A REAL PERSON",
+      },
+      update: {},
+    });
+
+    await prisma.resume.upsert({
+      where: { id: `demo-resume-${candidate.id}` },
+      create: {
+        id: `demo-resume-${candidate.id}`,
+        profileId: profile.id,
+        fileKey: `demo-resumes/${candidate.id}.pdf`,
+        filename: `${candidate.fullName.replace("Demo candidate · ", "")}-Resume.pdf`,
+        isCurrent: true,
+        isDemo: true,
+      },
+      update: {},
+    });
+  }
+
+  // DEMO COMPANIES
+  const companies = [
+    {
+      name: "Demo company · TechNova",
+      slug: "demo-technova",
+      industry: "Information Technology",
+      city: "Pune",
+    },
+    {
+      name: "Demo company · CloudBridge",
+      slug: "demo-cloudbridge",
+      industry: "Software",
+      city: "Bengaluru",
+    },
+    {
+      name: "Demo company · DataNest",
+      slug: "demo-datanest",
+      industry: "Data Analytics",
+      city: "Mumbai",
+    },
+  ];
+
+  const companyRecords = [];
+
+  for (const item of companies) {
+    const record = await prisma.company.upsert({
+      where: { slug: item.slug },
+      create: {
+        ...item,
+        description: "Sample company profile for RecruitAI demonstration.",
+        isDemo: true,
+        verificationStatus: "UNVERIFIED",
+        demoLabel: "DEMO DATA · NOT A REAL COMPANY",
+      },
+      update: {},
+    });
+
+    companyRecords.push(record);
+  }
+
+  // DEMO JOB LISTINGS
+  const jobs = [
+    {
+      id: "demo-job-react",
+      companyIndex: 0,
+      title: "Junior React Developer",
+      location: "Pune",
+      salaryMin: 400000,
+      salaryMax: 700000,
+      experienceMinYears: 1,
+      experienceMaxYears: 3,
+      skills: ["React", "JavaScript", "CSS", "Next.js"],
+      description:
+        "Build modern web applications using React and Next.js. Work with designers and backend developers to create reliable user experiences.",
+    },
+    {
+      id: "demo-job-backend",
+      companyIndex: 1,
+      title: "Backend Developer",
+      location: "Bengaluru",
+      salaryMin: 700000,
+      salaryMax: 1200000,
+      experienceMinYears: 2,
+      experienceMaxYears: 5,
+      skills: ["Node.js", "PostgreSQL", "REST API", "AWS"],
+      description:
+        "Develop scalable backend services, build REST APIs and work with databases and cloud infrastructure.",
+    },
+    {
+      id: "demo-job-analyst",
+      companyIndex: 2,
+      title: "Data Analyst",
+      location: "Mumbai",
+      salaryMin: 500000,
+      salaryMax: 900000,
+      experienceMinYears: 1,
+      experienceMaxYears: 4,
+      skills: ["Python", "SQL", "Power BI", "Excel"],
+      description:
+        "Analyze business data, prepare dashboards and communicate useful insights to business teams.",
+    },
+    {
+      id: "demo-job-fullstack",
+      companyIndex: 0,
+      title: "Full Stack Developer",
+      location: "Pune",
+      salaryMin: 800000,
+      salaryMax: 1400000,
+      experienceMinYears: 2,
+      experienceMaxYears: 5,
+      skills: ["React", "Node.js", "TypeScript", "PostgreSQL"],
+      description:
+        "Build end-to-end web applications and collaborate with product and design teams.",
+    },
+    {
+      id: "demo-job-uiux",
+      companyIndex: 1,
+      title: "UI/UX Designer",
+      location: "Remote",
+      salaryMin: 500000,
+      salaryMax: 850000,
+      experienceMinYears: 1,
+      experienceMaxYears: 3,
+      skills: ["Figma", "Wireframing", "Prototyping", "UI Design"],
+      description:
+        "Design intuitive interfaces, create prototypes and improve product experiences through user research.",
+    },
+  ];
+
+  for (const job of jobs) {
+    await prisma.job.upsert({
+      where: { id: job.id },
+      create: {
+        id: job.id,
+        companyId: companyRecords[job.companyIndex].id,
+        createdByUserId: "demo-company-owner",
+        title: job.title,
+        description: job.description,
+        location: job.location,
+        workMode: job.location === "Remote" ? "REMOTE" : "HYBRID",
+        salaryMin: job.salaryMin,
+        salaryMax: job.salaryMax,
+        experienceMinYears: job.experienceMinYears,
+        experienceMaxYears: job.experienceMaxYears,
+        employmentType: "FULL_TIME",
+        industry: "Technology",
+        skills: job.skills,
+        status: "PUBLISHED",
+        postedAt: new Date(),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        isDemo: true,
+        demoLabel: "DEMO DATA · NOT A REAL JOB",
+      },
+      update: {},
+    });
+  }
