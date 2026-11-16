@@ -128,8 +128,18 @@ export function SeekerProfile() {
 
   async function upload(file: File | undefined) {
     if (!file) return;
-    if (file.type !== 'application/pdf' || !file.name.toLocaleLowerCase().endsWith('.pdf')) {
-      toast.error('Choose a PDF file. Other file types are not accepted.');
+    const extension = file.name.toLocaleLowerCase().split('.').pop();
+    const allowedTypes: Record<string, string> = {
+      pdf: 'application/pdf',
+      doc: 'application/msword',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+    if (
+      !extension ||
+      allowedTypes[extension] !== file.type ||
+      file.size > 5 * 1024 * 1024
+    ) {
+      toast.error('Choose a PDF, DOC or DOCX file up to 5 MB.');
       return;
     }
     setUploading(true);
@@ -149,7 +159,7 @@ export function SeekerProfile() {
       );
       setResume(saved);
       await load();
-      toast.success('Private PDF resume saved');
+      toast.success('Private resume saved');
     } catch (error) {
       const message =
         error instanceof FileUploadError
@@ -410,14 +420,14 @@ export function SeekerProfile() {
           <Input
             id="resume-file"
             type="file"
-            accept="application/pdf,.pdf"
+            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             onChange={(event) => {
               void upload(event.target.files?.[0]);
               event.currentTarget.value = '';
             }}
             disabled={uploading}
           />
-          <p className="text-xs text-muted-foreground">{t('pdfLimit')}</p>
+          <p className="text-xs text-muted-foreground">PDF, DOC or DOCX · Maximum file size 5 MB</p>
           <Button
             type="button"
             variant="outline"
