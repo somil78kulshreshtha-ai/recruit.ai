@@ -1,3 +1,4 @@
+import { prisma } from '@/lib/db';
 // @polsia:user-owned — deploy-time database seed. You OWN this file.
 //
 // seed() runs once when the server boots (via the framework-owned
