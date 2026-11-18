@@ -193,6 +193,8 @@ export const publicMessages = {
     fuHours: '{n} h',
     fuDays: '{n} days',
     fuLoadError: 'Could not load follow-up data.',
+    jobsDemoBadge: 'Demo data',
+    jobsDemoNote: 'Sample listing for demonstration only. You cannot apply to it.',
   },
   hi: {
     navFindJobs: 'नौकरियाँ खोजें',
@@ -383,6 +385,8 @@ export const publicMessages = {
     fuHours: '{n} घंटे',
     fuDays: '{n} दिन',
     fuLoadError: 'फ़ॉलो-अप डेटा लोड नहीं हो सका।',
+    jobsDemoBadge: 'डेमो डेटा',
+    jobsDemoNote: 'यह केवल प्रदर्शन के लिए नमूना लिस्टिंग है। इसमें आवेदन नहीं किया जा सकता।',
   },
   mr: {
     navFindJobs: 'नोकऱ्या शोधा',
@@ -573,5 +577,7 @@ export const publicMessages = {
     fuHours: '{n} तास',
     fuDays: '{n} दिवस',
     fuLoadError: 'फॉलो-अप डेटा लोड होऊ शकला नाही.',
+    jobsDemoBadge: 'डेमो डेटा',
+    jobsDemoNote: 'ही फक्त प्रात्यक्षिकासाठी नमुना लिस्टिंग आहे. यात अर्ज करता येत नाही.',
   },
 } as const;

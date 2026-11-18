@@ -309,8 +309,16 @@ export function JobsSearch() {
                     <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                       {t('jobsOpenRole')}
                     </span>
+                    {job.demoLabel ? (
+                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                        {t('jobsDemoBadge')}
+                      </span>
+                    ) : null}
                   </div>
                   <p className="mt-1 font-medium text-muted-foreground">{job.company.name}</p>
+                  {job.demoLabel ? (
+                    <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">{t('jobsDemoNote')}</p>
+                  ) : null}
                   <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <MapPin className="size-4" />
@@ -355,6 +363,7 @@ export function JobsSearch() {
                   <Button
                     type="button"
                     variant="outline"
+                    disabled={Boolean(job.demoLabel)}
                     onClick={() => void toggleSaved(job)}
                     aria-label={
                       job.saved
@@ -365,7 +374,7 @@ export function JobsSearch() {
                     <Bookmark className="mr-2 size-4" fill={job.saved ? 'currentColor' : 'none'} />
                     {job.saved ? t('jobsSaved') : t('jobsSave')}
                   </Button>
-                  <Button type="button" onClick={() => void apply(job)}>
+                  <Button type="button" disabled={Boolean(job.demoLabel)} onClick={() => void apply(job)}>
                     {t('jobsApply')}
                   </Button>
                 </div>

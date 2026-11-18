@@ -150,7 +150,8 @@ export const publicJobSchema = z.object({
   maxNoticePeriodDays: z.number().nullable(),
   postedAt: z.string().nullable(),
   company: z.object({ id: z.string(), name: z.string(), industry: z.string(), city: z.string() }),
-  saved: z.boolean().optional(),
+demoLabel: z.string().nullable().optional(),  
+saved: z.boolean().optional(),
 });
 
 export const applicationOutputSchema = z.object({

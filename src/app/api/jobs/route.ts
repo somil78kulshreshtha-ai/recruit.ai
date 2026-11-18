@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import { isOpenJob, rateLimit, requestUser } from '@/lib/business/recruitai-server';
 import { jobSearchSchema } from '@/lib/contracts/recruitai';
 import { prisma } from '@/lib/db';
+import { demoModeEnabled } from '@/lib/demo-mode';
 
 export async function GET(request: Request) {
   const limited = await rateLimit(request, 'job-search', null, 120);
@@ -15,11 +16,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'invalid_filters' }, { status: 400 });
   }
   const filter = parsed.data;
+  const demo = demoModeEnabled();
+  // In demo mode the sample (isDemo) rows are included; otherwise they stay hidden.
+  const visibility = demo ? {} : { isDemo: false };
   const conditions: Prisma.JobWhereInput[] = [
     {
       status: 'PUBLISHED',
-      isDemo: false,
-      company: { suspended: false, isDemo: false },
+      ...visibility,
+      company: { suspended: false, ...visibility },
       OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
     },
   ];
@@ -33,7 +37,7 @@ export async function GET(request: Request) {
           company: {
             name: { contains: filter.q, mode: 'insensitive' },
             suspended: false,
-            isDemo: false,
+            ...visibility,
           },
         },
       ],
@@ -50,7 +54,7 @@ export async function GET(request: Request) {
       company: {
         name: { contains: filter.company, mode: 'insensitive' },
         suspended: false,
-        isDemo: false,
+        ...visibility,
       },
     });
   if (filter.salaryMin !== undefined)
@@ -82,7 +86,7 @@ export async function GET(request: Request) {
     : new Set<string>();
   return NextResponse.json({
     items: jobs
-      .filter((job) => isOpenJob(job))
+      .filter((job) => isOpenJob(job, demo))
       .map((job) => ({
         id: job.id,
         title: job.title,
@@ -99,6 +103,7 @@ export async function GET(request: Request) {
         maxNoticePeriodDays: job.maxNoticePeriodDays,
         postedAt: job.postedAt?.toISOString() ?? null,
         company: job.company,
+        demoLabel: job.isDemo ? (job.demoLabel ?? 'DEMO DATA') : null,
         saved: savedIds.has(job.id),
       })),
   });
